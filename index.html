@@ -241,7 +241,20 @@
         filtered = filtered.filter(t => t.status === filterStatus);  
       }  
   
-      filtered.sort((a, b) => a.studentName.localeCompare(b.studentName));  
+      /* ------------------------------------
+         UPDATED SORTING:
+         1. Sort by Class & Section (A-Z)
+         2. Then sort by Student Name (A-Z)
+      -------------------------------------- */
+      filtered.sort((a, b) => {
+        const classA = a.classSection.toLowerCase();
+        const classB = b.classSection.toLowerCase();
+
+        if (classA < classB) return -1;
+        if (classA > classB) return 1;
+
+        return a.studentName.localeCompare(b.studentName);
+      });  
   
       const tableBody = document.getElementById('taskBody');  
       tableBody.innerHTML = '';  
