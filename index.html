@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Tracker</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 750px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; }
+    input, select, button {
+      width: 100%; padding: 10px; margin: 8px 0;
+      border-radius: 5px; border: 1px solid #ccc;
+    }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    .edit-btn { background: #28a745; color: white; padding: 6px 10px; border: none; }
+    .delete-btn { background: #dc3545; color: white; padding: 6px 10px; border: none; }
+
+    .export-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .export-buttons button {
+      width: 48%;
+      background: #28a745;
+    }
+    .export-buttons button:nth-child(2) {
+      background: #6f42c1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2>Project Tracker</h2>
+
+    <input type="text" id="studentName" placeholder="Enter Name (Example: ALEXA M)">
+    <input type="text" id="classSection" placeholder="Enter Class & Section (Example: III BCA A)">
+    <input type="text" id="projectName" placeholder="Enter Project Name (Example: Smart Attendance)">
+    <input type="text" id="domainName" placeholder="Enter Domain Name (Example: Full Stack)">
+
+    <select id="status">
+      <option value="Not Started">Not Started</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Completed">Completed</option>
+    </select>
+
+    <button onclick="addTask()">Add Entry</button>
+
+    <div class="export-buttons">
+      <button onclick="exportExcel()">Download Excel</button>
+      <button onclick="exportPDF()">Download PDF</button>
+    </div>
+
+    <table id="taskTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Class & Section</th>
+          <th>Project Name</th>
+          <th>Domain</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Excel library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- PDF libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    let tasks = [];
+
+    window.onload = function () {
+      const saved = localStorage.getItem("tasks");
+      if (saved) {
+        tasks = JSON.parse(saved);
+        renderTasks();
+      }
+    };
+
+    function saveToLocal() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function addTask() {
+      const studentName = document.getElementById('studentName').value;
+      const classSection = document.getElementById('classSection').value;
+      const projectName = document.getElementById('projectName').value;
+      const domainName = document.getElementById('domainName').value;
+      const status = document.getElementById('status').value;
+
+      if (!studentName || !classSection || !projectName || !domainName) {
+        alert('Please fill all fields');
+        return;
+      }
+
+      const newTask = { 
+        id: Date.now(), 
+        studentName, 
+        classSection, 
+        projectName, 
+        domainName, 
+        status 
+      };
+
+      tasks.push(newTask);
+      saveToLocal();
+      renderTasks();
+
+      document.getElementById('studentName').value = '';
+      document.getElementById('classSection').value = '';
+      document.getElementById('projectName').value = '';
+      document.getElementById('domainName').value = '';
+      document.getElementById('status').value = 'Not Started';
+    }
+
+    function renderTasks() {
+      tasks.sort((a, b) => {
+        if (a.classSection < b.classSection) return -1;
+        if (a.classSection > b.classSection) return 1;
+        return a.studentName.localeCompare(b.studentName);
+      });
+
+      const tableBody = document.getElementById('taskBody');
+      tableBody.innerHTML = '';
+
+      tasks.forEach(item => {
+        const row = `
+          <tr>
+            <td>${item.studentName}</td>
+            <td>${item.classSection}</td>
+            <td>${item.projectName}</td>
+            <td>${item.domainName}</td>
+            <td><strong>${item.status}</strong></td>
+            <td>
+              <button class="edit-btn" onclick="editTask(${item.id})">Edit</button>
+              <button class="delete-btn" onclick="deleteTask(${item.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      saveToLocal();
+      renderTasks();
+    }
+
+    function editTask(id) {
+      const item = tasks.find(t => t.id === id);
+      if (!item) return;
+
+      document.getElementById('studentName').value = item.studentName;
+      document.getElementById('classSection').value = item.classSection;
+      document.getElementById('projectName').value = item.projectName;
+      document.getElementById('domainName').value = item.domainName;
+      document.getElementById('status').value = item.status;
+
+      deleteTask(id);
+    }
+
+    /* ---------- FIXED WORKING EXCEL EXPORT ---------- */
+    function exportExcel() {
+      try {
+        const table = document.getElementById("taskTable");
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.table_to_sheet(table);
+
+        XLSX.utils.book_append_sheet(wb, ws, "Projects");
+        XLSX.writeFile(wb, "Project_Tracker.xlsx");
+
+      } catch (error) {
+        alert("Excel export failed!");
+        console.error(error);
+      }
+    }
+
+    /* ---------- FIXED WORKING PDF EXPORT ---------- */
+    async function exportPDF() {
+      try {
+        const table = document.getElementById("taskTable");
+
+        const canvas = await html2canvas(table, {
+          scale: 2,
+          useCORS: true
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jspdf.jsPDF("p", "mm", "a4");
+
+        let width = 200;
+        let height = (canvas.height * width) / canvas.width;
+
+        pdf.addImage(imgData, "PNG", 5, 5, width, height);
+        pdf.save("Project_Tracker.pdf");
+
+      } catch (error) {
+        alert("PDF export failed!");
+        console.error(error);
+      }
+    }
+  </script>
+
+</body>
+</html>
