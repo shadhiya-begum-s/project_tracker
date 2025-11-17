@@ -12,38 +12,33 @@
       margin: 0;
       padding: 20px;
     }
+
     .container {
-      max-width: 750px;
+      max-width: 900px;
       margin: auto;
       background: #fff;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
     h2 { text-align: center; }
     input, select, button {
-      width: 100%; padding: 10px; margin: 8px 0;
-      border-radius: 5px; border: 1px solid #ccc;
-    }
-    button { background: #007bff; color: white; border: none; cursor: pointer; }
-    button:hover { background: #0056b3; }
-
-    table {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ccc;
       padding: 10px;
-      text-align: left;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
-    th {
-      background: #007bff;
-      color: white;
+
+    button { 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
     }
-    .edit-btn { background: #28a745; color: white; padding: 6px 10px; border: none; }
-    .delete-btn { background: #dc3545; color: white; padding: 6px 10px; border: none; }
+    button:hover { background: #0056b3; }
 
     .export-buttons {
       display: flex;
@@ -58,20 +53,73 @@
       background: #6f42c1;
     }
 
-    /* Filter section */
     .filters {
       margin-top: 15px;
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
     .filters select, .filters input {
       flex: 1;
+      min-width: 150px;
+    }
+
+    /* Table Styles */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    .edit-btn { background: #28a745; color: white; padding: 6px 10px; border: none; cursor: pointer; }
+    .delete-btn { background: #dc3545; color: white; padding: 6px 10px; border: none; cursor: pointer; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      input, select, button {
+        font-size: 14px;
+        padding: 8px;
+      }
+      table th, table td {
+        padding: 6px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h2 { font-size: 20px; }
+      .filters {
+        flex-direction: column;
+      }
+      .export-buttons {
+        flex-direction: column;
+      }
+      .export-buttons button {
+        width: 100%;
+        margin-bottom: 8px;
+      }
     }
   </style>
 </head>
 
 <body>
-
   <div class="container">
     <h2>Project Tracker</h2>
 
@@ -93,7 +141,7 @@
       <button onclick="exportPDF()">Download PDF</button>
     </div>
 
-    <!-- UPDATED FILTER SECTION -->
+    <!-- Filter Section -->
     <h3>Search / Filter</h3>
     <div class="filters">
       <input type="text" id="searchBox" placeholder="Search by name, class, project..." onkeyup="renderTasks()">
@@ -106,19 +154,21 @@
       </select>
     </div>
 
-    <table id="taskTable">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Class & Section</th>
-          <th>Project Name</th>
-          <th>Domain</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="taskBody"></tbody>
-    </table>
+    <div class="table-responsive">
+      <table id="taskTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Class & Section</th>
+            <th>Project Name</th>
+            <th>Domain</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="taskBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Excel library -->
@@ -296,6 +346,5 @@
       }
     }
   </script>
-
 </body>
-  </html>
+</html>
