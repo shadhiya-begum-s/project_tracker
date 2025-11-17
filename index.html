@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+ <!DOCTYPE html>  
 <html lang="en">  
 <head>  
   <meta charset="UTF-8" />  
@@ -282,35 +282,51 @@
       deleteTask(id);  
     }  
   
-    function exportExcel() {  
-      try {  
-        const table = document.getElementById("taskTable");  
-        const wb = XLSX.utils.book_new();  
-        const ws = XLSX.utils.table_to_sheet(table);  
-        XLSX.utils.book_append_sheet(wb, ws, "Projects");  
-        XLSX.writeFile(wb, "Project_Tracker.xlsx");  
-      } catch (error) { alert("Excel export failed!"); }  
-    }  
-  
-    async function exportPDF() {  
-      try {  
-        const table = document.getElementById("taskTable");  
-        const canvas = await html2canvas(table, { scale: 2 });  
-        const imgData = canvas.toDataURL("image/png");  
-        const pdf = new jspdf.jsPDF("p", "mm", "a4");  
-  
-        const pageWidth = 210;  
-        const margin = 5;  
-        const imgProps = pdf.getImageProperties(imgData);  
-        const pdfWidth = pageWidth - margin * 2;  
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;  
-  
-        pdf.addImage(imgData, "PNG", margin, 10, pdfWidth, pdfHeight);  
-        pdf.save("Project_Tracker.pdf");  
-      } catch (error) {  
-        alert("PDF export failed!");  
-      }  
-    }  
+    /* --------------------------------------------------
+       REMOVE ACTION COLUMN ONLY IN EXCEL EXPORT
+    -------------------------------------------------- */
+    function exportExcel() {
+      const table = document.getElementById("taskTable");
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.table_to_sheet(table);
+
+      // Remove last column (Actions)
+      const range = XLSX.utils.decode_range(ws["!ref"]);
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        const cell = XLSX.utils.encode_cell({ r: r, c: range.e.c });
+        delete ws[cell];
+      }
+      range.e.c--;
+      ws["!ref"] = XLSX.utils.encode_range(range);
+
+      XLSX.utils.book_append_sheet(wb, ws, "Projects");
+      XLSX.writeFile(wb, "Project_Tracker.xlsx");
+    }
+
+    /* --------------------------------------------------
+       REMOVE ACTION COLUMN ONLY IN PDF EXPORT
+    -------------------------------------------------- */
+    async function exportPDF() {
+      const table = document.querySelector("#taskTable");
+
+      // Extract table without last Actions column
+      const rows = [];
+      table.querySelectorAll("tr").forEach(tr => {
+        const cols = Array.from(tr.querySelectorAll("th, td"))
+          .slice(0, -1)       // Remove last column
+          .map(td => td.innerText);
+        rows.push(cols);
+      });
+
+      const pdf = new jspdf.jsPDF();
+
+      pdf.autoTable({
+        head: [rows[0]],
+        body: rows.slice(1)
+      });
+
+      pdf.save("Project_Tracker.pdf");
+    }
   </script>  
 </body>  
 </html>
